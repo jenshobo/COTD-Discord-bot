@@ -1,0 +1,63 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build-update",
+      "type": "shell",
+      "command": "g++",
+      "args": [
+        "-std=c++17",
+        "-I${workspaceFolder}/hdr/queue-update",
+        "-I${workspaceFolder}/lib",
+        "-I${workspaceFolder}/hdr",
+        "-o",
+        "${workspaceFolder}/build/update-app",
+        "${workspaceFolder}/src/queue-update/*.cpp",
+        "${workspaceFolder}/src/*.cpp",
+        "-ldpp"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": [
+        "$gcc"
+      ],
+      "detail": "Build C++ project"
+    },
+    {
+      "label": "build-manager",
+      "type": "shell",
+      "command": "g++",
+      "args": [
+        "-std=c++17",
+        "-I${workspaceFolder}/hdr/queue-manager",
+        "-I${workspaceFolder}/lib",
+        "-I${workspaceFolder}/hdr",
+        "-o",
+        "${workspaceFolder}/build/manager-app",
+        "${workspaceFolder}/src/queue-manager/*.cpp",
+        "${workspaceFolder}/src/*.cpp",
+        "-ldpp"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": [
+        "$gcc"
+      ],
+      "detail": "Build C++ project"
+    },
+    {
+      "label": "build-all",
+      "dependsOn": ["build-update", "build-manager"],
+      "dependsOrder": "sequence",
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    }
+  ]
+}
