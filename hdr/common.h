@@ -7,6 +7,6 @@
 #include "json.h"
 #include "cat.h"
 
-const std::string QUEUE_FILE_NAME = "COTD_queue.json";
+const std::string QUEUE_FILE_NAME = "COTD-queue.json";
 
 #endif
