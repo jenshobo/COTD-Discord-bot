@@ -74,6 +74,9 @@ void get_entree(cat& entree) {
         entree.url = queue.front().url;
         queue.pop();
     }
+    else {
+        return;
+    }
 
     increment_offset();
     write_queue(prio_queue, queue);
