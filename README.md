@@ -20,7 +20,7 @@ To run on a physical server and on the Discord server it is important to grant t
 | scopes | bot |
 | text permissions | Send Messages |
 
-Then for it to run properly in Discord it should have ```View Channel``` and ```Send Messages``` access to two channels, this being the private channel where questions are managed with the commission whom is responsible for this and the COTD channel where it'll send all it's items from the queue. Lastly it'll need a download folder, this will without modification be ```/files``` in it's working directory, please create this folder before use.
+Then for it to run properly in Discord it should have ```View Channel``` and ```Send Messages``` access to two channels, this being the private channel where questions are managed with the commission whom is responsible for this and the COTD channel where it'll send all it's items from the queue.
 
 ## commands
 
@@ -73,7 +73,7 @@ g++ -std=c++17 -Ihdr/queue-update -Ilib -Ihdr -o build/update-app src/queue-upda
 g++ -std=c++17 -Ihdr/queue-manager -Ilib -Ihdr -o build/manager-app src/queue-manager/main.cpp src/json.cpp -ldpp
 ```
 
-Next you'll need to create a json file in which the queue will be stored among a few other things, this file looks like follows. You'll need to manually add the discord bot token you've generated earier. Offset is just a number used to index all the items in the queue, if you have never done a QOTD in Discord before, leave this as 1. qoft-channel-id is the id of the channel the bot will post all the questions.
+Next you'll need to create a json file in which the queue will be stored among a few other things, this file looks like follows. You'll need to manually add the discord bot token you've generated earier. Offset is just a number used to index all the items in the queue, if you have never done a COTD in Discord before, leave this as 1. post-channel-id is the id of the channel the bot will post all the entrees.
 
 ```json
 {
