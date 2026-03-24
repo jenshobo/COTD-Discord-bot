@@ -112,7 +112,7 @@ void add_to_queue(dpp::cluster& bot, const std::string& cat_name, const dpp::sno
     std::queue<cat> prioqueue = get_prio_queue();
 
     std::stringstream local_url;
-    local_url << std::filesystem::current_path().u8string() << "/files/" << att.filename;
+    local_url << std::filesystem::current_path().u8string() << FILE_FOLDER << att.filename;
 
     download_file(bot, att.url, local_url.str());
 
@@ -156,6 +156,8 @@ void remove_from_queue(uint64_t index) {
 void list_queue(std::stringstream& ss) {
     std::queue<cat> queue = get_queue();
     std::queue<cat> prio_queue = get_prio_queue();
+
+    if (prio_queue.empty() && queue.empty()) { ss << "Queue is empty"; }
 
     uint64_t offset = get_offset();
 

@@ -24,20 +24,31 @@ int main(void) {
 
         dpp::message msg(get_post_channel(), ss.str());
         msg.set_file_content(dpp::utility::read_file(entree.url));
-        msg.set_filename(entree.url);
+        msg.set_filename(entree.get_short_url());
 
         bot.message_create(msg,
-            [&bot, &entree](const dpp::confirmation_callback_t& callback) {
+            [&bot, entree](const dpp::confirmation_callback_t& callback) {
                 if (!callback.is_error()) {
-                    std::cout << "Question sent successfully" << std::endl;
+                    std::cout << "Entree sent successfully" << std::endl;
                 } else {
                     std::cerr << "Failed to send question: " << callback.get_error().message << std::endl;
                 }
 
+                std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+                
+                std::filesystem::path path = entree.url;
+                std::cout << "Trying to delete: " << path << std::endl;
+                std::error_code ec;
+                bool removed = std::filesystem::remove(path, ec);
+
+                if (!removed) {
+                    std::cerr << "Failed to remove file: " << ec.message() << std::endl;
+                } else {
+                    std::cout << "File removed successfully\n";
+                }
+
                 // Keep program running for at least {SHUTDOWN_DELAY} time for shards to finish loading
                 std::this_thread::sleep_for(std::chrono::seconds(SHUTDOWN_DELAY));
-
-                std::remove(entree.url.c_str());
 
                 bot.shutdown();
             }
