@@ -1,5 +1,12 @@
 #include "main.h"
 
+void shutdown(dpp::cluster& bot) {
+    // Keep program running for at least {SHUTDOWN_DELAY} time for shards to finish loading
+    std::this_thread::sleep_for(std::chrono::seconds(SHUTDOWN_DELAY));
+
+    bot.shutdown();
+}
+
 int main(void) {
     dpp::cluster bot(get_token());
     bot.on_log(dpp::utility::cout_logger());
@@ -19,8 +26,13 @@ int main(void) {
         cat entree;
         get_entree(entree);
 
+        if (entree.url == "") { shutdown(bot); }
+
+        uint64_t index = get_offset();
+
         std::stringstream ss;
-        ss << "<@" << entree.owner_id << "> would like you to meet " << entree.name;
+        ss << index << "<@" << entree.owner_id << ">" << std::endl
+           << "Deelt graag met jou de kat " << entree.name << "." << std::endl;
 
         dpp::message msg(get_post_channel(), ss.str());
         msg.set_file_content(dpp::utility::read_file(entree.url));
@@ -47,10 +59,7 @@ int main(void) {
                     std::cout << "File removed successfully\n";
                 }
 
-                // Keep program running for at least {SHUTDOWN_DELAY} time for shards to finish loading
-                std::this_thread::sleep_for(std::chrono::seconds(SHUTDOWN_DELAY));
-
-                bot.shutdown();
+                shutdown(bot);
             }
         );
     });

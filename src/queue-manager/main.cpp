@@ -4,6 +4,13 @@ int main(void) {
     dpp::cluster bot(get_token());
     bot.on_log(dpp::utility::cout_logger());
     bot.on_slashcommand([&bot](const dpp::slashcommand_t& event) {
+        if (event.command.get_channel().id != get_alert_channel()) {
+            std::stringstream ss;
+            ss << PERMISSION_REPLY_ERROR;
+            event.reply(ss.str());
+            return;
+        }
+
         if (event.command.get_command_name() == HELP_COMMAND) {
             std::stringstream ss;
             ss << HELP_TEXT;

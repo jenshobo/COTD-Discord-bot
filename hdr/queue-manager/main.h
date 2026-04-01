@@ -20,6 +20,10 @@
 
 #define ERROR_REPLY_GET "Could not get image, please check if the entree exists."
 
+#define PERMISSION_REPLY_ERROR \
+               "Helaas heb jij geen toegang om direct met deze bot te interacten." << std::endl \
+            << "Mocht je iets willen doen met de bot, neem dan contact op met <@384087009553022977>." << std::endl
+
 #define HELP_TEXT \
                "you can manage the queue using the following commands:" << std::endl \
             << "```" << std::endl \
