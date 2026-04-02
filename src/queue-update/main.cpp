@@ -24,14 +24,13 @@ int main(void) {
         }
 
         cat entree;
+        uint64_t index = get_offset();
         get_entree(entree);
 
         if (entree.url == "") { shutdown(bot); }
 
-        uint64_t index = get_offset();
-
         std::stringstream ss;
-        ss << index << "<@" << entree.owner_id << ">" << std::endl
+        ss << index << ". <@" << entree.owner_id << ">" << std::endl
            << "Deelt graag met jou de kat " << entree.name << "." << std::endl;
 
         dpp::message msg(get_post_channel(), ss.str());
