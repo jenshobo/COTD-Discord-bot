@@ -1,4 +1,5 @@
 #include "main.h"
+#include "queue-manager/main.h"
 
 void shutdown(dpp::cluster& bot) {
     // Keep program running for at least {SHUTDOWN_DELAY} time for shards to finish loading
@@ -11,17 +12,8 @@ int main(void) {
     dpp::cluster bot(get_token());
     bot.on_log(dpp::utility::cout_logger());
     bot.on_ready([&bot](const dpp::ready_t& event) {
-        if (get_queue_length() <= 3) {
-            bot.message_create(dpp::message(get_alert_channel(), "**[ALERT]**. Queue has less then 3 items in it, check current list using `/list`."),
-                [&bot](const dpp::confirmation_callback_t& callback) {
-                    if (!callback.is_error()) {
-                        std::cout << "Alert sent successfully" << std::endl;
-                    } else {
-                        std::cerr << "Failed to send alert: " << callback.get_error().message << std::endl;
-                    }
-                }
-            );
-        }
+        if (get_today()) { shutdown(bot); return; }
+        set_today();
 
         cat entree;
         uint64_t index = get_offset();
@@ -29,9 +21,34 @@ int main(void) {
 
         if (entree.url == "") { shutdown(bot); }
 
+        if (get_queue_length() <= 1) {
+            std::string url = "https://cataas.com/cat";
+
+            std::queue<cat> queue = get_queue();
+            std::queue<cat> prioqueue = get_prio_queue();
+
+            std::stringstream local_url;
+            local_url << std::filesystem::current_path().u8string() << FILE_FOLDER << index << ".jpeg";
+
+            download_file(bot, url, local_url.str());
+                
+            cat new_cat;
+            new_cat.name = "";
+            new_cat.owner_id = 0;
+            new_cat.url = local_url.str();
+                
+            queue.push(new_cat);
+                
+            write_queue(prioqueue, queue);
+        }
+
         std::stringstream ss;
-        ss << index << ". <@" << entree.owner_id << ">" << std::endl
-           << "Deelt graag met jou de kat " << entree.name << "." << std::endl;
+        if (entree.owner_id != 0) {
+            ss << index << ". <@" << entree.owner_id << ">" << std::endl
+               << "Deelt graag met jou de kat " << entree.name << "." << std::endl;
+        } else {
+            ss << index << "." << std::endl;
+        }
 
         dpp::message msg(get_post_channel(), ss.str());
         msg.set_file_content(dpp::utility::read_file(entree.url));
@@ -58,6 +75,7 @@ int main(void) {
                     std::cout << "File removed successfully\n";
                 }
 
+                increment_offset();
                 shutdown(bot);
             }
         );
@@ -97,6 +115,5 @@ void get_entree(cat& entree) {
         return;
     }
 
-    increment_offset();
     write_queue(prio_queue, queue);
 }

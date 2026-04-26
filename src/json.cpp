@@ -19,7 +19,8 @@ void write_queue(
     std::optional<dpp::snowflake> alert_channel = std::nullopt,
     std::optional<dpp::snowflake> post_channel = std::nullopt,
     std::optional<std::queue<cat>> prio_queue = std::nullopt,
-    std::optional<std::queue<cat>> queue = std::nullopt
+    std::optional<std::queue<cat>> queue = std::nullopt,
+    std::optional<std::string> time = std::nullopt
 ) {
     uint64_t offset_field = offset.value_or(get_offset());
     std::string token_field = token.value_or(get_token());
@@ -27,6 +28,7 @@ void write_queue(
     dpp::snowflake post_channel_field = post_channel.value_or(get_post_channel());
     std::queue<cat> prio_queue_field = prio_queue.value_or(get_prio_queue());
     std::queue<cat> queue_field = queue.value_or(get_queue());
+    std::string time_field = time.value_or(get_time());
 
     std::vector<nlohmann::json> prio_queue_vec = convert_to_vec(prio_queue_field);
     std::vector<nlohmann::json> queue_vec = convert_to_vec(queue_field);
@@ -37,7 +39,8 @@ void write_queue(
     j[ALERT_CHANNEL_FIELD] = static_cast<uint64_t>(alert_channel_field);
     j[POST_CHANNEL_FIELD] = static_cast<uint64_t>(post_channel_field);
     j[PRIO_QUEUE_FIELD] = prio_queue_vec;
-    j[QUEUE_FIELD] = queue_vec;    
+    j[QUEUE_FIELD] = queue_vec;  
+    j[DATE_FIELD] =   time_field;
 
     std::ofstream file(QUEUE_FILE_NAME);
     file << j.dump(4);
@@ -58,6 +61,48 @@ uint64_t get_offset(void) {
     }
     
     return 0;
+}
+
+std::string get_time(void) {
+    std::ifstream file(QUEUE_FILE_NAME);
+    nlohmann::json j;
+
+    if (file >> j) {
+        if (j.contains(DATE_FIELD) && j[DATE_FIELD].is_string()) {
+            return j[DATE_FIELD];
+        }
+    }
+    return "19000101T140000Z";
+}
+
+void write_time(const std::string& time) {
+    write_queue(std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, time);
+}
+
+bool get_today(void) {
+    std::tm tm {};
+    std::istringstream ss(get_time());
+
+    ss >> std::get_time(&tm, "%Y%m%dT%H%M%SZ");
+
+    std::time_t json_date = timegm(&tm);
+    std::time_t curr_date = std::time(nullptr);
+    double diff = std::difftime(curr_date, json_date);
+
+    std::cout << "TIME_T:    " << json_date << " < " << curr_date << std::endl;
+    std::cout << "TIME DIFF: " << diff << " < " << DAY_TIME_T << std::endl;
+
+    return diff < DAY_TIME_T;
+}
+
+void set_today(void) {
+    std::time_t time = std::time(nullptr);
+    std::tm tm = *gmtime(&time);
+
+    std::ostringstream ss;
+    ss << std::put_time(&tm, "%Y%m%dT%H%M%SZ");
+
+    write_time(ss.str());
 }
 
 void increment_offset(void) {
@@ -128,3 +173,15 @@ std::queue<cat> get_prio_queue(void) {
 std::queue<cat> get_queue(void) {
     return get_queue(QUEUE_FIELD);
 }
+
+void download_file(dpp::cluster& bot, const std::string& url, const std::string& path) {
+    bot.request(url, dpp::m_get, [path](const dpp::http_request_completion_t& res) {
+        if (res.status == 200) {
+            std::ofstream out(path, std::ios::binary);
+            out.write(res.body.data(), res.body.size());
+            out.close();
+        } else {
+            std::cerr << "Download failed: HTTP " << res.status << std::endl;
+        }
+    });
+};

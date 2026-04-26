@@ -4,6 +4,16 @@
 #include "common.h"
 #include <filesystem>
 
+#define SUGGEST_COMMAND "suggest"
+#define INFO_COMMAND    "info"
+
+#define SUGGEST_DESCRIPTION "Upload een foto met naam en misschien voegen we het toe"
+#define INFO_DESCRIPTION    "Wat kun je met deze bot als algemeen lid."
+
+#define INFO_TEXT \
+               "Je kunt met het /" << SUGGEST_COMMAND << " een kat(ten) foto en naam insturen." << std::endl \
+            << "Hierbij zal gekeken worden of je foto en naam gepast zijn, en zo ja zul je deze vanzelf zien voorkomen in de COTD channel."
+
 #define ADD_COMMAND     "add"
 #define ADDPRIO_COMMAND "addprio"
 #define REMOVE_COMMAND  "remove"
@@ -57,6 +67,9 @@
 #define COMMAND_OPTION_REMOVE_DESCRIPTION   "Index of entree to be removed"
 #define COMMAND_OPTION_GET_NAME             COMMAND_OPTION_REMOVE_NAME
 #define COMMAND_OPTION_GET_DESCRIPTION      "Get picture of entree in queue"
+
+#define SUGGEST_COMMAND_RESPONCE(a)          "Vragen of " << a << " toegevoegt kan worden aan de lijst..."
+#define SUGGEST_ADMIN_COMMAND_RESPONCE(a, b, c) "<@" << a << "> asks if { " << b << " } can be added. " << c
 
 #define ADD_COMMAND_RESPONCE(a)     "Adding " << a << " to the queue"
 #define ADDPRIO_COMMAND_RESPONCE(a) "Adding " << a << " to the prio-queue"

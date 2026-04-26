@@ -4,6 +4,36 @@ int main(void) {
     dpp::cluster bot(get_token());
     bot.on_log(dpp::utility::cout_logger());
     bot.on_slashcommand([&bot](const dpp::slashcommand_t& event) {
+        if (event.command.get_command_name() == INFO_COMMAND) {
+            std::stringstream ss;
+            ss << INFO_TEXT;
+            event.reply(ss.str());
+            return;
+        }
+
+        if (event.command.get_command_name() == SUGGEST_COMMAND) {
+            std::string cat_name = std::get<std::string>(event.get_parameter(COMMAND_OPTION_CAT_NAME));
+            dpp::snowflake user_id = event.command.usr.id;
+            dpp::snowflake file_id = std::get<dpp::snowflake>(event.get_parameter(COMMAND_OPTION_URL_NAME));
+            dpp::attachment att = event.command.get_resolved_attachment(file_id);
+ 
+            std::stringstream ss;
+            ss << SUGGEST_COMMAND_RESPONCE(cat_name);
+
+            std::stringstream sss;
+            sss << SUGGEST_ADMIN_COMMAND_RESPONCE(user_id, cat_name, att.url);
+            dpp::message reply_msg;
+            reply_msg.set_content(ss.str()).set_flags(dpp::m_ephemeral);
+
+            dpp::message admin_msg(get_alert_channel(), sss.str());
+            //admin_msg.set_file_content(att.url);
+            //admin_msg.set_filename(att.filename);
+            bot.message_create(admin_msg);
+
+            event.reply(reply_msg);
+            return;
+        }
+
         if (event.command.get_channel().id != get_alert_channel()) {
             std::stringstream ss;
             ss << PERMISSION_REPLY_ERROR;
@@ -11,10 +41,13 @@ int main(void) {
             return;
         }
 
+        /* EVERYTHING UNDER HERE IS FOR AUTHERISED PERSONS ONLY */
+
         if (event.command.get_command_name() == HELP_COMMAND) {
             std::stringstream ss;
             ss << HELP_TEXT;
             event.reply(ss.str());
+            return;
         }
         if (event.command.get_command_name() == ADD_COMMAND) {
             std::string cat_name = std::get<std::string>(event.get_parameter(COMMAND_OPTION_CAT_NAME));
@@ -28,6 +61,7 @@ int main(void) {
             event.reply(ss.str());
 
             add_to_queue(bot, cat_name, user_id, att, false);
+            return;
         }
         if (event.command.get_command_name() == ADDPRIO_COMMAND) {
             std::string cat_name = std::get<std::string>(event.get_parameter(COMMAND_OPTION_CAT_NAME));
@@ -41,6 +75,7 @@ int main(void) {
             event.reply(ss.str());
 
             add_to_queue(bot, cat_name, user_id, att, true);
+            return;
         }
         if (event.command.get_command_name() == REMOVE_COMMAND) {
             uint64_t index = std::get<int64_t>(event.get_parameter(COMMAND_OPTION_REMOVE_NAME));
@@ -51,12 +86,14 @@ int main(void) {
             event.reply(ss.str());
 
             remove_from_queue(index);
+            return;
         }
         if (event.command.get_command_name() == LIST_COMMAND) {
             std::stringstream ss;
             list_queue(ss);
             
             event.reply(ss.str());
+            return;
         }
         if (event.command.get_command_name() == GET_COMMAND) {
             uint64_t index = std::get<int64_t>(event.get_parameter(COMMAND_OPTION_GET_NAME));
@@ -73,11 +110,17 @@ int main(void) {
             else {
                 event.reply(ERROR_REPLY_GET);
             }
+            return;
         }
     });
 
     bot.on_ready([&bot](const dpp::ready_t&event) {
         if (dpp::run_once<struct register_bot_commands>()) {
+            bot.global_command_create(dpp::slashcommand(INFO_COMMAND, INFO_DESCRIPTION, bot.me.id));
+            bot.global_command_create(dpp::slashcommand(SUGGEST_COMMAND, SUGGEST_DESCRIPTION, bot.me.id)
+                .add_option(dpp::command_option(dpp::co_string, COMMAND_OPTION_CAT_NAME, COMMAND_OPTION_CAT_DESCRIPTION, true))
+                .add_option(dpp::command_option(dpp::co_attachment, COMMAND_OPTION_URL_NAME, COMMAND_OPTION_URL_DESCRIPTION, true))
+            );
             bot.global_command_create(dpp::slashcommand(HELP_COMMAND, HELP_DESCRIPTION, bot.me.id));
             bot.global_command_create(dpp::slashcommand(ADD_COMMAND, ADD_DESCRIPTION, bot.me.id)
                 .add_option(dpp::command_option(dpp::co_string, COMMAND_OPTION_CAT_NAME, COMMAND_OPTION_CAT_DESCRIPTION, true))
@@ -100,18 +143,6 @@ int main(void) {
     });
 
     bot.start(dpp::st_wait);
-}
-
-void download_file(dpp::cluster& bot, const std::string& url, const std::string& path) {
-    bot.request(url, dpp::m_get, [path](const dpp::http_request_completion_t& res) {
-        if (res.status == 200) {
-            std::ofstream out(path, std::ios::binary);
-            out.write(res.body.data(), res.body.size());
-            out.close();
-        } else {
-            std::cerr << "Download failed: HTTP " << res.status << std::endl;
-        }
-    });
 }
 
 void add_to_queue(dpp::cluster& bot, const std::string& cat_name, const dpp::snowflake& user_id, const dpp::attachment& att, bool prio) {
