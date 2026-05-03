@@ -10,6 +10,10 @@ This program is to be run at startup of the server, this can be achived using a 
 
 This program is to be run periodically, either manually or using ```.timer``` and ```.service``` files for automatic using in systemd. This program will take the top entree in the queue and post it in the channel it's pointed at. This program should not run more than ones an hour, I recommend ones every 24 hours.
 
+__! note:__
+
+Currently the bot has a limit of 1 message per 12 hours, this is due to D++ sometimes posting twice if the network is busy and requests take long.
+
 ## privilages
 
 To run on a physical server and on the Discord server it is important to grant the bot specific privileges. On the physical server where the apps will run it is important the programs are allowed to read and write to the file ```COTD-queue.json``` which is to be placed in the same folder as the apps. To allow the bot to run in Discord it should be granted the following privilages buring the bot's creation in the [Discord developer environment](https://discord.com/developers/applications) OAuth2 URL generator, this URL can be pasted into a browser to invite the bot into the server:
@@ -20,7 +24,7 @@ To run on a physical server and on the Discord server it is important to grant t
 | scopes | bot |
 | text permissions | Send Messages |
 
-Then for it to run properly in Discord it should have ```View Channel``` and ```Send Messages``` access to two channels, this being the private channel where questions are managed with the commission whom is responsible for this and the COTD channel where it'll send all it's items from the queue.
+Then for it to run properly in Discord it should have ```View Channel``` and ```Send Messages``` access to two channels, this being the private channel where questions are managed with the commission whom is responsible for this and the COTD channel where it'll send all it's items from the queue. The private channel is the only channel the bot will allow commands from, every other channel will be rejected*.
 
 ## commands
 
@@ -28,6 +32,8 @@ The manager app knows a number of commands in order to interface the queue with 
 
 | Command | Description |
 | - | -- |
+| ```/info``` | Get info of the bot, for use in other cnannels besides private |
+| ```/suggest``` | Suggest a picture to the private channel for adding to the queue, for use in other channels |
 | ```/add``` | Add an entree to the back of the queue. |
 | ```/addprio```| Add an entree to the back of the prioqueue. |
 | ```/remove``` | Remove an entree BY INDEX. |
@@ -52,7 +58,7 @@ To completely set up the program and bot the progress boils down to two steps: s
 
 ### setup Discord bot
 
-We assume you at least have a basic understanding of mananing a Discord server.
+We assume you at least have a basic understanding of mannanging a Discord server.
 
 To start you need to setup the Discord bot that'll post the COTD. To do this you'll need to go the the [Discord developer environment](https://discord.com/developers/applications). Log in using your Discord account, then you should be able to create a new application.
 
@@ -60,26 +66,27 @@ Ones created you should be able to enter it. In the tab ```bot``` you should be 
 
 You then need to invite the bot over to your Discord, to do this you need to go to the tab ```OAuth2```. In here you need to use the ```OAuth2 URL Generator``` to create a URL, please make sure to check ```message.read``` and ```bot```, ```bot``` should open another list of checkmarks below, in here, check ```Send Messages```. Then at the bottom there should be a generated URL, copy and paste this into a new browser tab to invite the bot over to your server.
 
-In Discord you need to give the bot permission to view the channel and send messages in two channels, one where you will manage the bot behind the scenes and one where the bot will post the C for every other user to see. The bot does not need permission to use any other channel (as a matter of fact I recommend not allowing the bot in any other channels).
+In Discord you need to give the bot permission to view the channel and send messages in two channels, one where you will manage the bot behind the scenes and one where the bot will post the Cat of the day for every other user to see. The bot does not need permission to use any other channel (as a matter of fact I recommend not allowing the bot in any other channels unless you want to make use of the ```/suggest``` command).
 
 Lastly the bot will need the channel ID of the channel you want it to send the COTD to. You can get this by right clicking the channel and press ```copy channel ID```. Save this ID for later as you need to during the install progress for the program. Do the same for alerts if you want to be alerted if the queue is not getting new enrtees.
 
 ### compile guide
 
-To compile the program you'll need to all listed packages downloaded and/or installed. Furthermore please create a folder called build in the working directory. Then execute the following commands to compile the two programs, these will be saved to the build folder.
+To compile the program you'll need to have all listed packages downloaded and/or installed. Furthermore please create a folder called build in the working directory. Then execute the following commands to compile the two programs, these will be saved to the build folder.
 
 ```sh
 g++ -std=c++17 -Ihdr/queue-update -Ilib -Ihdr -o build/update-app src/queue-update/main.cpp src/json.cpp -ldpp
 g++ -std=c++17 -Ihdr/queue-manager -Ilib -Ihdr -o build/manager-app src/queue-manager/main.cpp src/json.cpp -ldpp
 ```
 
-Next you'll need to create a json file in which the queue will be stored among a few other things, this file looks like follows. You'll need to manually add the discord bot token you've generated earier. Offset is just a number used to index all the items in the queue, if you have never done a COTD in Discord before, leave this as 1. post-channel-id is the id of the channel the bot will post all the entrees.
+Next you'll need to create a json file in which the queue will be stored among a few other things, this file looks like follows. You'll need to manually add the discord bot token you've generated earier. Offset is just a number used to index all the items in the queue, if you have never done a COTD in Discord before, leave this as 1. post-channel is the id of the channel the bot will post all the entrees. alert-channel is the id of the channel that all alerts will be send to (if there are any, at this point in time, there aren't) but this channel will also function as the only channel the commands are accepted in*.
 
 ```json
 {
     "alert_channel": 0,
     "offset": 1,
     "post_channel": 0,
+    "previous_date": "19000101T120000Z",
     "prio_queue": [],
     "queue": [],
     "token": ""
